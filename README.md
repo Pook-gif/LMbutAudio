@@ -4,7 +4,7 @@ A neural network in Python for playing back music via generation; to get perfect
 ## Prerequisites
 - Linux, or WSL. I'm sure this would work on Windows but I'm unsure of how to 'transplant' it.
 - Nvidia GPU with cuda
-- Python ~3.13
+- Python 3.x (3.13 used here)
 
 ## Linux Setup
 
