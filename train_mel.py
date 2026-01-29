@@ -60,6 +60,7 @@ def train_mel_model(
     model_type='transformer',  # 'transformer', 'lstm', or 'gru'
     seq_length=128,
     batch_size=16,
+    accumulation_steps=1,
     epochs=100,
     learning_rate=0.0003,
     warmup_epochs=5,
@@ -110,6 +111,9 @@ def train_mel_model(
 
     print(f"Dataset: {len(dataset):,} sequences (seq_len={seq_length}, stride={seq_length//2})")
     print(f"Batches per epoch: {len(dataloader)}")
+    if accumulation_steps > 1:
+        print(f"[GRAD ACCUM] Steps: {accumulation_steps}")
+        print(f"[GRAD ACCUM] Effective batch size: {batch_size * accumulation_steps}")
     print("=" * 60)
 
     # Create model
@@ -182,11 +186,12 @@ def train_mel_model(
         epoch_loss = 0
         epoch_acc = 0
 
+        # Zero gradients at start of epoch
+        optimizer.zero_grad()
+
         pbar = tqdm(dataloader, desc=f"Epoch {epoch+1}/{epochs}")
         for batch_idx, (x, y, time_pos) in enumerate(pbar):
             x, y, time_pos = x.to(device), y.to(device), time_pos.to(device)
-
-            optimizer.zero_grad()
 
             # Forward pass with AMP
             with autocast(enabled=use_amp):
@@ -223,22 +228,28 @@ def train_mel_model(
                 entropy = -(probs * torch.log(probs + 1e-10)).sum(dim=-1).mean()
 
                 # cross-entropy - small entropy bonus
-                loss = ce_loss - 0.03 * entropy
+                # Scale loss for gradient accumulation
+                loss = (ce_loss - 0.03 * entropy) / accumulation_steps
 
             # Backward pass
             scaler.scale(loss).backward()
-            scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(model.parameters(), gradient_clip)
-            scaler.step(optimizer)
-            scaler.update()
-            scheduler.step()
+
+            # Only step optimizer every accumulation_steps
+            if (batch_idx + 1) % accumulation_steps == 0 or (batch_idx + 1) == len(dataloader):
+                scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), gradient_clip)
+                scaler.step(optimizer)
+                scaler.update()
+                scheduler.step()
+                optimizer.zero_grad()
 
             # Calculate accuracy
             with torch.no_grad():
                 _, predicted = torch.max(output, dim=-1)
                 acc = (predicted == y_residual).float().mean()
 
-            epoch_loss += loss.item()
+            # Accumulate metrics (unscale loss for logging)
+            epoch_loss += loss.item() * accumulation_steps
             epoch_acc += acc.item()
 
             # Update progress bar
@@ -304,6 +315,7 @@ if __name__ == "__main__":
     parser.add_argument('--model_type', type=str, default='transformer', choices=['transformer', 'lstm', 'gru'])
     parser.add_argument('--seq_length', type=int, default=128, help='Sequence length in frames')
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size')
+    parser.add_argument('--accumulation_steps', type=int, default=1, help='Gradient accumulation steps (effective_batch = batch_size * accumulation_steps)')
     parser.add_argument('--epochs', type=int, default=100, help='Number of epochs')
     parser.add_argument('--lr', type=float, default=0.0003, help='Learning rate')
     parser.add_argument('--warmup_epochs', type=int, default=5, help='Warmup epochs')
@@ -319,6 +331,7 @@ if __name__ == "__main__":
         model_type=args.model_type,
         seq_length=args.seq_length,
         batch_size=args.batch_size,
+        accumulation_steps=args.accumulation_steps,
         epochs=args.epochs,
         learning_rate=args.lr,
         warmup_epochs=args.warmup_epochs,
