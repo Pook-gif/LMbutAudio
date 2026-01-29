@@ -7,6 +7,8 @@ import argparse
 from mel_models import MelTransformer, MelLSTM, MelGRU
 from preprocess_audio_v2 import mel_tokens_to_audio
 
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
 
 def generate_mel_audio_residual(
     checkpoint_path,

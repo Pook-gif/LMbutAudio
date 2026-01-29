@@ -11,6 +11,8 @@ import math
 from mel_models import MelTransformer, MelLSTM, MelGRU
 from preprocess_audio_v2 import load_mel_token_data
 
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
 
 class MelDataset(Dataset):
     """Dataset for mel-spectrogram sequences with time position tracking"""
@@ -201,8 +203,8 @@ def train_mel_model(
                 for b in range(y.shape[0]):
                     for t in range(y.shape[1]):
                         if t == 0:
-                            # First frame: use difference from last frame of x
-                            y_residual[b, t] = y[b, t] - x[b, -1]
+                            # First frame
+                            y_residual[b, t] = y[b, t] - x[b, t]
                         else:
                             # Subsequent frames: use difference from previous frame
                             y_residual[b, t] = y[b, t] - y[b, t-1]
