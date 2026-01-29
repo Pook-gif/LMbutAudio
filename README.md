@@ -71,6 +71,8 @@ Min: 0, Max: 255
 Average entropy: 2.846
 Entropy std: 0.021
 ```
+### Done!
+The final .wav should be.. somewhere in there unless you redirected it. Experiment with oscillation, seq length, batch size, temperature, more training data, etc, for better results
 
 ## Flags
 ### train_mel.py
