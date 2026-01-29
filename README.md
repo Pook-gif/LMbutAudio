@@ -16,7 +16,7 @@ Create the venv `python -m venv .venv && source .venv/bin/activate`
 
 Install dependencies: `pip install tqdm torch torchaudio numpy torchcodec`
 
-Example file structure:
+Example file structure after downloading and pasting from [releases](https://github.com/Pook-gif/LMbutAudio/releases/):
 
 ```
 (.venv) Gentoo@Gentoo ~/Downloads/whattheaids $ tree
