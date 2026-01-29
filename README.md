@@ -88,6 +88,7 @@ The final .wav should be.. somewhere in there unless you redirected it. Experime
 -  --gradient_clip GRADIENT_CLIP | Gradient clipping
 -  --device DEVICE | Device (e.g: cpu, cuda)
 -  --save_dir SAVE_DIR | Checkpoint/model directory
+-  --accumulation_steps ACCUMULATION_STEPS | Gradient accumulation steps (effective_batch = batch_size * accumulation_steps)
   
 ### generate_mel_residual.py
 -  --output OUTPUT | Output audio path
