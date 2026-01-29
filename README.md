@@ -60,7 +60,7 @@ Saved to tokens.pkl (217.9 MB)
 ```
 2. Train a neural network `python train_mel.py --model_type transformer --epochs 100 --batch_size 20 --seq_length 256 --save_dir output/` - This is a minimal example, experiment according to your hardware constraints but this is what works well for me on 8GB of VRAM without spilling to system RAM. By default you will have the latest iteration of the model come out every 10 epoch unless you use the `--checkpoint-every` flag.
 - Try out python train_mel.py --help to see what flags can also be used (e.g: frequency of writing to disk by epoch, model type, device, learning rate, etc)
-3. Generate `python generate_mel_residual.py /home/Gentoo/Downloads/whattheaids/output/checkpoint_epoch_10.pt --duration 30 --temperature 0.7 --output /home/Gentoo/Downloads/whattheaids/output`
+3. Generate `python generate_mel_residual.py /home/Gentoo/Downloads/whattheaids/output/checkpoint_epoch_10.pt --duration 30 --temperature 0.7 --output /home/Gentoo/Downloads/whattheaids/output/generated.wav`
 - Just like training, make sure to check the flags with the --help flag. Output should look alike to this when complete:
 ```
 GENERATION COMPLETE
